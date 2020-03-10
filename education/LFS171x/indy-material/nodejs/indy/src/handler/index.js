@@ -28,19 +28,26 @@ module.exports = function(config) { //factory function creates object and return
             let decryptedMessage = await indy.crypto.publicKeyAnonDecrypt(buffer);
             console.log("test6")
             if(messageHandlerMap[decryptedMessage.type]) {
+                console.log("test7")
+                console.log(decryptedMessage.type)
                 let handler = messageHandlerMap[decryptedMessage.type];
-                if(handler.length === 2) { // number of parameters
+                if(handler.length === 2) {
+                     // number of parameters
+                     console.log("test8")
                     handler(decryptedMessage, function(err) {
                         if(err) {
+                            console.log("test9")
                             console.error(err.stack);
                             throw err;
                         } else {
+                            console.log("test10")
                             res.status(202).send("Accepted");
                         }
                     })
                 } else {
                     handler(decryptedMessage)
                         .then((data) => {
+                            console.log("test11")
                             res.status(202).send("Accepted");
                         })
                         .catch((err) => {
@@ -49,6 +56,7 @@ module.exports = function(config) { //factory function creates object and return
                         })
                 }
             } else {
+                console.log("test12")
                 indy.store.messages.write(null, decryptedMessage);
                 res.status(202).send("Accepted");
             }

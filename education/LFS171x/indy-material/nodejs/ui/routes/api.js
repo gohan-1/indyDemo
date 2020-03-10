@@ -41,15 +41,17 @@ router.post('/issuer/create_cred_def', auth.isLoggedIn, async function (req, res
 });
 
 router.post('/issuer/send_credential_offer', auth.isLoggedIn, async function (req, res) {
-    await indy.credentials.sendOffer(req.body.their_relationship_did, req.body.cred_def_id);
+    await indy.pairwise.pushAttribute(req.body.their_relationship_did,req.body.offers)
+    let cred = await indy.credentials.sendOffer(req.body.their_relationship_did, req.body.cred_def_id);
+    res.send(cred)
     res.redirect('/#issuing');
 });
 
 router.post('/credentials/accept_offer', auth.isLoggedIn, async function(req, res) {
     let message = indy.store.messages.getMessage(req.body.messageId);
     indy.store.messages.deleteMessage(req.body.messageId);
-    await indy.credentials.sendRequest(message.message.origin, message.message.message);
-    res.redirect('/#messages');
+    let offer=    await indy.credentials.sendRequest(message.message.origin, message.message.message);
+    res.send(offer)
 });
 
 router.post('/credentials/reject_offer', auth.isLoggedIn, async function(req, res) {
@@ -98,13 +100,10 @@ router.post('/proofs/accept', auth.isLoggedIn, async function(req, res) {
 router.get("/credentials", auth.isLoggedIn, async function (req, res) {
     let endpointCredentials;
     let resp;
-    try{
+
         endpointCredentials = await indy.credentials.getAll();
-        resp = response.prepareSuccessResponse(JSON.stringify(endpointCredentials), responseType.SUCCESS, respCode.INDY_MSG_USER_CREDENTIAL, response.JSON_RESULT);
-    }catch(err) {
-        resp=response.prepareErrorResponse(responseType.FAULT, respCode.INDY_MSG_GLOBAL_ERR, err.message);
-    }
-    res.send(resp);
+       
+    res.send(endpointCredentials);
 });
 
 

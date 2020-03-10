@@ -42,13 +42,20 @@ exports.addProof = async function(theirDid, proof, proofRequest) {
     await sdk.setPairwiseMetadata(await indy.wallet.get(), theirDid, JSON.stringify(metadata));
 };
 
-exports.pushAttribute = async function(theirDid, attribute, value) {
+exports.pushAttribute = async function(theirDid, offers) {
     let pairwise = await exports.get(theirDid);
+    let attribute,value;
     let metadata = JSON.parse(pairwise.metadata);
-    if(!metadata[attribute]) {
-        metadata[attribute] = [];
+    for(var i=0;i<offers.length;i++){
+        attribute=offers[i].name;
+        value =offers[i].value;
+        if(!metadata[attribute]) {
+            metadata[attribute] = [];
+        }
+        metadata[attribute].push(value);
     }
-    metadata[attribute].push(value);
+
+   
     await sdk.setPairwiseMetadata(await indy.wallet.get(), theirDid, JSON.stringify(metadata));
 };
 
