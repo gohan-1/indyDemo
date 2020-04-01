@@ -30,6 +30,14 @@ exports.getEndpointDid = async function() {
     return endpointDid;
 };
 
+// exports.endpointDid= async function(){
+
+//   let endpointDid= await
+
+
+    
+// }
+
 exports.createEndpointDid = async function () {
     await setupSteward();
 

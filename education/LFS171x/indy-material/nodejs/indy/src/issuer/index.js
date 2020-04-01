@@ -57,6 +57,12 @@ exports.getCredDef = async function(poolHandle, did, credDefId) {
     let getCredDefResponse = await sdk.submitRequest(poolHandle, getCredDefRequest);
     return await sdk.parseGetCredDefResponse(getCredDefResponse);
 };
+exports.retriveCredDef= async function(){
+
+    let credDefs = await indy.did.getEndpointDidAttribute('credential_definitions');
+    return credDefs;
+
+}
 
 exports.getCredDefByTag = async function(credDefTag) {
     let credDefs = await indy.did.getEndpointDidAttribute('credential_definitions');

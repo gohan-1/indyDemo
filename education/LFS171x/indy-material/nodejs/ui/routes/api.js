@@ -8,6 +8,7 @@ router.get('/', function (req, res, next) {
 });
 
 router.get('/message', auth.isLoggedIn, async function (req, res) {
+    try{
     let rawMessage = await indy.store.messages.getAll()
     let messages=[]
     for (message of rawMessage){
@@ -15,15 +16,24 @@ router.get('/message', auth.isLoggedIn, async function (req, res) {
     }
     res.send(messages)
 
+}catch(e){
+    res.send("error")
+}
+  
 });
 
 router.post('/send_connection_request', auth.isLoggedIn, async function (req, res) {
+    try{
     let theirEndpointDid = req.body.did;
     let connectionRequest = await indy.connections.prepareRequest(theirEndpointDid);
 
     let encryptmsg = await indy.crypto.sendAnonCryptedMessage(theirEndpointDid, connectionRequest);
-    res.send(encryptmsg)
-    res.redirect('/#relationships');
+    res.send(encryptmsg+" "+"connection request")
+    }catch(e){
+        res.send("error")
+    }
+   
+   
 });
     
 
@@ -31,20 +41,19 @@ router.post('/issuer/create_schema', auth.isLoggedIn, async function (req, res) 
     let test=await indy.issuer.createSchema(req.body.name_of_schema, req.body.version, req.body.attributes);
     console.log(test)
     res.send(test)
-    res.redirect('/#issuing');
+
 });
 
 router.post('/issuer/create_cred_def', auth.isLoggedIn, async function (req, res) {
     let credid=await indy.issuer.createCredDef(req.body.schema_id, req.body.tag);
     res.send(credid)
-    res.redirect('/#issuing');
+   
 });
 
 router.post('/issuer/send_credential_offer', auth.isLoggedIn, async function (req, res) {
     await indy.pairwise.pushAttribute(req.body.their_relationship_did,req.body.offers)
     let cred = await indy.credentials.sendOffer(req.body.their_relationship_did, req.body.cred_def_id);
     res.send(cred)
-    res.redirect('/#issuing');
 });
 
 router.post('/credentials/accept_offer', auth.isLoggedIn, async function(req, res) {
@@ -56,7 +65,7 @@ router.post('/credentials/accept_offer', auth.isLoggedIn, async function(req, re
 
 router.post('/credentials/reject_offer', auth.isLoggedIn, async function(req, res) {
     indy.store.messages.deleteMessage(req.body.messageId);
-    res.redirect('/');
+   
 });
 
 router.get("/endpointDid", auth.isLoggedIn, async function (req, res) {
@@ -68,13 +77,44 @@ router.get("/endpointDid", auth.isLoggedIn, async function (req, res) {
     res.send(did);
 });
 
+
+router.get("/endpointDid", auth.isLoggedIn, async function (req, res) {
+    let resp;
+    let did;
+    
+        did = await indy.issuer.getEndpointDid();
+        
+    res.send(did);
+});
+
+
+router.get("/credentialsDefinition", auth.isLoggedIn, async function (req, res) {
+    let resp;
+    let did;
+    
+        didinfo = await indy.issuer.retriveCredDef();
+        
+    res.send(didinfo);
+});
+
+router.post("/credentialsDefinitionByTag", auth.isLoggedIn, async function (req, res) {
+    
+    
+        let tag = req.body.tag
+       let  credInfo = await indy.issuer.getCredDefByTag(tag)
+        
+    res.send(credInfo);
+});
+
+
+
 router.put('/connections/request', auth.isLoggedIn, async function (req, res) {
    // let name = req.body.name;
     let messageId = req.body.messageId;
     let message = indy.store.messages.getMessage(messageId);
     indy.store.messages.deleteMessage(messageId);
     await indy.connections.acceptRequest( message.message.message.endpointDid, message.message.message.did, message.message.message.nonce);
-    res.redirect('/#relationships');
+    
 });
 
 router.delete('/connections/request', auth.isLoggedIn, async function (req, res) {
@@ -82,18 +122,18 @@ router.delete('/connections/request', auth.isLoggedIn, async function (req, res)
     if (req.body.messageId) {
         indy.store.messages.deleteMessage(req.body.messageId);
     }
-    res.redirect('/#relationships');
+    
 });
 
 router.post('/messages/delete', auth.isLoggedIn, function(req, res) {
     indy.store.messages.deleteMessage(req.body.messageId);
-    res.redirect('/#messages');
+    
 });
 
 router.post('/proofs/accept', auth.isLoggedIn, async function(req, res) {
       let crypto =  await indy.proofs.acceptRequest(req.body.messageId);
       res.send(crypto)  
-      res.redirect('/#messages');
+      
 });
 
 
@@ -112,12 +152,12 @@ router.post('/requestProof', auth.isLoggedIn, async function(req, res) {
     console.log(myDid)
     await indy.proofs.sendRequest(myDid, req.body.their_relationship_did,"proofRequestOther", req.body.manual_entry);
     res.send("requested")
-    res.redirect('/#proofs');
+  
 });
 
 
 router.get('/relationships', auth.isLoggedIn, async function(req, res) {
-    console.log("testtttt")
+ 
     let relationships=await indy.pairwise.getAll()
     res.send(relationships)
 });
